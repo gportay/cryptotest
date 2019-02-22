@@ -124,7 +124,11 @@ static int test_aes(int cfd, int do_bench, unsigned int nr, unsigned int keysize
 	unsigned int nb_request = nr;
 	float nb_usec;
 	size_t rsize;
+#if OPENSSL_VERSION_NUMBER < 0x01010000
 	EVP_CIPHER_CTX en;
+#else
+	EVP_CIPHER_CTX *en = EVP_CIPHER_CTX_new();
+#endif
 
 	dst = malloc(data_len);
 	if (dst == NULL) {
@@ -162,25 +166,47 @@ static int test_aes(int cfd, int do_bench, unsigned int nr, unsigned int keysize
 			cryptodev_ctx_init(&ctx, cfd, key, keysize, CRYPTO_AES_CBC);
 		}
 		if (do_bench == 0) {
+#if OPENSSL_VERSION_NUMBER < 0x01010000
 			EVP_CIPHER_CTX_init(&en);
+#else
+			EVP_CIPHER_CTX_init(en);
+#endif
 			switch (keysize) {
 			case 16:
+#if OPENSSL_VERSION_NUMBER < 0x01010000
 				EVP_EncryptInit_ex(&en, EVP_aes_128_cbc(), NULL, key, iv);
+#else
+				EVP_EncryptInit_ex(en, EVP_aes_128_cbc(), NULL, key, iv);
+#endif
 				break;
 			case 24:
+#if OPENSSL_VERSION_NUMBER < 0x01010000
 				EVP_EncryptInit_ex(&en, EVP_aes_192_cbc(), NULL, key, iv);
+#else
+				EVP_EncryptInit_ex(en, EVP_aes_192_cbc(), NULL, key, iv);
+#endif
 				break;
 			case 32:
+#if OPENSSL_VERSION_NUMBER < 0x01010000
 				EVP_EncryptInit_ex(&en, EVP_aes_256_cbc(), NULL, key, iv);
+#else
+				EVP_EncryptInit_ex(en, EVP_aes_256_cbc(), NULL, key, iv);
+#endif
 				break;
 			default:
 				fprintf(stderr, "ERROR: invalid keysize %d\n", keysize);
 				err = -1;
 				goto test_end;
 			}
+#if OPENSSL_VERSION_NUMBER < 0x01010000
 			EVP_CIPHER_CTX_set_padding(&en, 0);
 			EVP_EncryptUpdate(&en, odst, &out_len, src, rsize);
 			EVP_CIPHER_CTX_cleanup(&en);
+#else
+			EVP_CIPHER_CTX_set_padding(en, 0);
+			EVP_EncryptUpdate(en, odst, &out_len, src, rsize);
+			EVP_CIPHER_CTX_cleanup(en);
+#endif
 			if (out_len > data_len || out_len > rsize) {
 				fprintf(stderr, "ERROR: %u %u %u\n", out_len, data_len, rsize);
 			}

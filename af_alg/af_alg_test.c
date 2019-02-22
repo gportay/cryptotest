@@ -46,6 +46,7 @@ static int openssl_aes(const unsigned char *buff, size_t off, size_t len, const 
 {
 	int out_len = sizeof(openssl_result);
 
+#if OPENSSL_VERSION_NUMBER < 0x01010000
 	EVP_CIPHER_CTX en;
 
 	EVP_CIPHER_CTX_init(&en);
@@ -56,6 +57,18 @@ static int openssl_aes(const unsigned char *buff, size_t off, size_t len, const 
 
 	EVP_EncryptUpdate(&en, openssl_result, &out_len, buff, len);
 	EVP_CIPHER_CTX_cleanup(&en);
+#else
+	EVP_CIPHER_CTX *en = EVP_CIPHER_CTX_new();
+
+	EVP_CIPHER_CTX_init(en);
+
+	EVP_EncryptInit_ex(en, EVP_aes_128_cbc(), NULL, key, iv);
+
+	EVP_CIPHER_CTX_set_padding(en, 0);
+
+	EVP_EncryptUpdate(en, openssl_result, &out_len, buff, len);
+	EVP_CIPHER_CTX_cleanup(en);
+#endif
 	return 0;
 }
 
