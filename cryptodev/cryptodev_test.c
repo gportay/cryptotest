@@ -243,7 +243,7 @@ static int test_aes(int cfd, int do_bench, unsigned int nr, unsigned int keysize
 							break;
 					}
 					fprintf(stderr, "Error at encrypt request %d pos=%d of len=%u\n", i, k, rsize);
-					for (i = 0; i < rsize && i < 24; i++) {
+					for (i = k; i < rsize && (i - k) < 16; i++) {
 						printf("%02x %02x\n", odst[i], dst[i]);
 					}
 					err = -1;
